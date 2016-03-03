@@ -9,7 +9,10 @@ var ProxyCache = require('./lib/ProxyCache'),
     spoofHostHeader = (process.env.npm_config_spoof_host_header !== undefined),
     staleCaching = (process.env.npm_config_stale_caching !== undefined),
     ignorePattern = process.env.npm_config_ignore_pattern,
+    rejectPattern = process.env.npm_config_reject_pattern,
+    rejectIPPattern = process.env.npm_config_reject_ip_pattern,
     ignoreList = [],
+    rejectList = [],
     app = express();
 
 if (ignorePattern){
@@ -20,6 +23,14 @@ if (ignorePattern){
     console.log('Using ignore list:', ignoreList);
 }
 
+if (rejectPattern){
+    rejectPatternArray = rejectPattern.split(',');
+    rejectPatternArray.forEach(function(rejectPatternString) {
+        rejectList.push(new RegExp(rejectPatternString));
+    })
+    console.log('Using reject list:', rejectList);
+}
+
 console.log("Using adapter %s",selectedAdapter);
 console.log("Creating proxy to %s", targetHost);
 var proxyCache = new ProxyCache({
@@ -27,7 +38,8 @@ var proxyCache = new ProxyCache({
     targetHost: targetHost,
     spoofHostHeader: spoofHostHeader,
     allowStaleCache: true, //staleCaching,
-    ignoreList: ignoreList
+    ignoreList: ignoreList,
+    rejectList: rejectList
 });
 
 app.use(compression());
